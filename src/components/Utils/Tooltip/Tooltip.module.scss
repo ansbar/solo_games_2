@@ -1,0 +1,38 @@
+.infoIcon {
+    position: relative;
+    display: inline-block;
+    border-bottom: 1px dashed black;
+    $width: 300px;
+  
+    span {
+        visibility: hidden;
+        background-color: black;
+        color: #fff;
+        padding: .5rem .7rem;
+        border-radius: 6px;
+        font-size: .8rem;
+        line-height: 1.2rem;
+    
+        position: absolute;
+        width: $width;
+        bottom: 120%;
+        left: 50%;
+        margin-left: -$width / 2; /* Use half of the width (120/2 = 60), to center the tooltip */
+        z-index: 1;
+
+        &::after {
+            content: " ";
+            position: absolute;
+            top: 100%; /* At the bottom of the tooltip */
+            left: 50%;
+            margin-left: -5px;
+            border-width: 5px;
+            border-style: solid;
+            border-color: black transparent transparent transparent;
+        }
+    }
+  
+    &:hover span {
+        visibility: visible;
+    }
+}
