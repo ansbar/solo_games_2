@@ -24,6 +24,7 @@ function App(props: IAppProps){
     const generalTexts = props.lang.general
     const opponentsTexts = props.lang.opponents
     const choicesTexts = props.lang[page].choices
+    const stillAliveText = props.lang[page].stillAlive || ""
     const abilitiesTexts = props.lang.abilities   
 
     dispatch(setStaticTexts(props.lang))
@@ -37,8 +38,7 @@ function App(props: IAppProps){
     
 
     return (
-        <div>
-            <ReduxDebug />
+        <div>            
             <h1>#{page}</h1> 
              
             {battle &&          
@@ -49,12 +49,14 @@ function App(props: IAppProps){
                 />
             }
             <Text />  
-            <Battle />
+            <Battle stillAliveText={stillAliveText} />
             <Choices 
                 abilitiesTexts={abilitiesTexts} 
                 choicesTexts={choicesTexts}                 
                 choices={pages[page].choices}
             />
+            <br/><br/><hr/>
+            <ReduxDebug />
         </div>           
     )
 }

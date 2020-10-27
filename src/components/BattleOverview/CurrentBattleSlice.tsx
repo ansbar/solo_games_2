@@ -38,9 +38,13 @@ export const currentBattleSlice = createSlice({
         setCurrentOpponent(state, action: PayloadAction<number>) {
             state.currentOpponent = action.payload
         },
-        decreaseCurrentOpponentHP(state, action: PayloadAction<number>) {
-            if(state.currentOpponent)
-                state.opponentlist[state.currentOpponent].hp -= action.payload
+        decreaseOpponentHP(state, action: PayloadAction<number>) {            
+            if(state.currentOpponent !== null){
+                const damage = action.payload 
+                const opponent = state.opponentlist[state.currentOpponent]
+                const newHp = opponent.hp - damage
+                opponent.hp = (newHp > 0) ? newHp : 0 
+            }
         }
     },
 })
@@ -51,6 +55,6 @@ export const {
     setBattleStatus, 
     setCurrentOpponent, 
     setBattleModifiers, 
-    decreaseCurrentOpponentHP 
+    decreaseOpponentHP 
 } = currentBattleSlice.actions
 export default currentBattleSlice.reducer

@@ -1,0 +1,48 @@
+.history {
+    background-color: #EBF5E6 !important;
+    border-radius: .5rem;
+    padding: 2rem;
+    margin-top: 1.5em;
+
+    h4 {
+        margin-bottom: 10px;
+    }
+
+    table {
+        width: calc(100% + 4rem);
+        margin-left: -2rem;
+        border-spacing: 0;
+        font-size: 0.9rem;
+
+        thead {
+            th {
+                font-weight: 700;
+                border-bottom: 1px solid #cddfc4;
+            }
+        }
+
+        tbody tr:first-child td {
+            transition: all 0.3s;
+            background-color: #dce9d6;          
+        }
+
+        td, th {
+            text-align: left;
+            padding: 3px 5px 0 0;
+
+            &.alignRight {
+                text-align: right;
+            }
+
+            &:first-child {
+                padding-left: 2rem;
+            }
+            &:last-child {
+                padding-right: 2rem;
+            }  
+            &:nth-child(3), &:nth-child(4), &:nth-child(5){
+                text-align: center;
+            }
+        }
+    }    
+}

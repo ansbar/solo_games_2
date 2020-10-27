@@ -19,6 +19,7 @@ function InnerForce(props: IChooseOpponentProps) {
     const playerInnerForce = useSelector(getPlayerInnerForce) 
 
     useEffect(() => {
+        console.log("InnerForce runs")
         // If player has no inner force left or attack type is a throw (where no actual damage is being made), go to next phase
         if(props.attackType === EnumAttackType.throw || playerInnerForce === 0)
             dispatch(setBattleStatus(EnumBattleStates.attack))        

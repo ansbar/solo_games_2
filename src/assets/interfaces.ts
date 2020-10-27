@@ -118,3 +118,15 @@ export interface ICurrentBattleOpponents {
     opponent_damage: string                
     opponent_defense: number
 }
+
+export interface IBattleHistoryRecord {
+    timeStamp: number
+    attacker: string
+    defender: string
+    attackRoll: number
+    defense: number
+    successful: boolean
+    damageRoll: number
+    damage: string
+    hp: string
+}

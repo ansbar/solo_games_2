@@ -30,7 +30,7 @@ function Choices(props: IChoicesProps) {
 
         // Show a link (button) if no attribute requirement exists or if its fullfilled
         if (!choice.ability || (choice.ability && player_abilities.hasOwnProperty(choice.ability)))
-            link = <a href="#" onClick={() => dispatch(setCurrentPage(choice.goto))}>{linkText}</a>
+            link = <button className="link" onClick={() => dispatch(setCurrentPage(choice.goto))}>{linkText}</button>
 
         return <li key={index}>{link}</li>
     }

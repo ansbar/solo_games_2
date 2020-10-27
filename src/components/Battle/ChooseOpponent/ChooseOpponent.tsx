@@ -14,6 +14,7 @@ function ChooseOpponent(props: IChooseOpponentProps) {
     const dispatch = useDispatch()
 
     useEffect(() => {
+        console.log("ChooseOpponent runs")
         // If only one opponent exists in the current battle we skip this phase and move on the next.
         if(props.opponents.length === 1)
             setOpponentAndStatus(0)  
@@ -31,7 +32,7 @@ function ChooseOpponent(props: IChooseOpponentProps) {
 
     return (
         <section>
-            <h4>Choose opponent</h4>
+            <p>Välj vem du vill attackera:</p>
             {props.opponents.map((opponent, i: number) => {
                 return opponentButton(opponent, i)
             })}  

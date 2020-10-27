@@ -19,7 +19,7 @@ export const playerSlice = createSlice({
         hp_max: 20,
         hp: 20,
         defense: 0,
-        innerForce: 5,
+        innerForce: 0,
         damage: "",
         abilities: {
             acrobat: true
@@ -31,7 +31,7 @@ export const playerSlice = createSlice({
 
             if(new_hp >= state.hp_max) state.hp = state.hp_max
             else if(new_hp <= 0) state.hp = 0
-            else state.hp = action.payload            
+            else state.hp = action.payload
         },
         setDefense(state, action: PayloadAction<number>) {
             state.defense = action.payload

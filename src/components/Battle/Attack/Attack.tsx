@@ -1,91 +1,144 @@
-import React, { useEffect } from 'react'
+import React, { useEffect, useState, useRef } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
 import diceRoll from '../DiceRoll/DiceRoll'
 import Button from 'components/Utils/Button/Button'
-import { getCurrentBattle, decreaseCurrentOpponentHP } from 'components/BattleOverview/CurrentBattleSlice'
-import { getPlayerInnerForce, decreaseInnerForce } from 'app/playerSlice';
-import { EnumAttackType, EnumBattleStates } from 'assets/enums'
-import { JsxAttribute, JsxElement } from 'typescript'
+import { EnumBattleStates } from 'assets/enums'
+import { IBattleHistoryRecord } from 'assets/interfaces'
+import { getCurrentBattle, decreaseOpponentHP, setBattleStatus } from 'components/BattleOverview/CurrentBattleSlice'
 
-interface IChooseOpponentProps {
-    attackType: EnumAttackType
+interface IAttackProps {
+    onSaveToHistory: any
+    stillAliveText: string
 }
 
-interface IBattleHistoryRecord {
-    attacker: string
-    defender: string
-    diceroll: number
-    defense: number
-    damage: number
-    successfulAttack: boolean
-}
-
-function Attack() {   
-    const dispatch = useDispatch()    
+function Attack(props: IAttackProps) {   
+    const loadOnce = useRef(false)
+    const dispatch = useDispatch()  
+    const [content, setContent] = useState(<p></p>)      
     const defaultAttackChance = "2T6"
     const currentBattle = useSelector(getCurrentBattle)
     const currentOpponent = currentBattle.opponentlist[currentBattle.currentOpponent || 0]
-    let battleHistory: IBattleHistoryRecord[] = []
+    
 
-    function doAttack(){
-        const attackRole = diceRoll(defaultAttackChance)
-        const defenseChance = currentOpponent.opponent_defense
-        const successfulAttack = attackRole > defenseChance  
-        let damage: number = 0      
+    useEffect(() => {
+        /* We only want the attack to be run once in every activation
+         * We use useRef to handle this. We could instead have set useEffect with an empty dependency list:
+         * useEffect(() => { .. },[])
+         * But that would have created an lint error */
+        if (!loadOnce.current) {
+            console.log("Attack runs")
+            doAttack()
+            loadOnce.current = true;
+        }
+    })
 
-        if(successfulAttack){
-            damage = diceRoll(currentOpponent.player_damage)
-            registerDamage(damage)
-        }        
+    /* Function doAttack
+     * Main track. We run this function once per activation */
+    function doAttack(){        
+        const attackRoll = diceRoll(defaultAttackChance)
+        const defense = currentOpponent.opponent_defense
+        const successfulAttack = attackRoll > defense
+        const damage = (successfulAttack) ? diceRoll(currentOpponent.player_damage) : 0
+        let damageText
+        let hpLeft = calculateHpLeft(damage)
 
-        saveAttackToHistory(currentOpponent.name, attackRole, defenseChance, successfulAttack, damage)
+        // If the opponent where hit, role for damage and assign it.
+        if(successfulAttack){     
+            dispatch(decreaseOpponentHP(damage))  
+            damageText = getDamageText(damage, hpLeft)
+        }
 
-        const attackText = getAttackTextFromHistory(1)        
-        const hitOrMissText: string = getHitOrMissText(successfulAttack)
+        // Save to history. The function is in parent component
+        props.onSaveToHistory({
+            timeStamp: Date.now(),
+            attacker: "Hämnaren",
+            defender: currentOpponent.name,
+            attackRoll: attackRoll,
+            defense: defense,
+            successful: successfulAttack,
+            damageRoll: damage,
+            damage: currentOpponent.player_damage,
+            hp: hpLeft + "/" + currentOpponent.hpMax
+        } as IBattleHistoryRecord)
 
-        return <div>{hitOrMissText} ({attackText}).</div>
+        setContent(
+            <div>
+                {getHitOrMissText(successfulAttack)}
+                <br/>{damageText}
+                {getContinuation(hpLeft)}
+            </div>
+        )
     }
 
-    function registerDamage(damage: number){
-        console.log("registerDamage",damage)
-        dispatch(decreaseCurrentOpponentHP(damage))
+    /* Function getContinuation
+     * What happends after the attack?
+     * If there are opponents left alive we go to defend phase
+     * If all are dead we continue the story */
+    function getContinuation(hpLeft: number){
+        if(areAllOpponentsDead(hpLeft))
+            return <Button onClick={() => setBattleState(EnumBattleStates.win)} text={"Försvara dig"} className={"cta"} />
+        
+        return (
+            <div>
+                <br/>
+                {props.stillAliveText}<br/>
+                <p>
+                    <Button onClick={() => setBattleState(EnumBattleStates.defend)} text={"Försvara dig"} className={"cta"} />
+                </p>
+            </div>
+        )
     }
 
-    function saveAttackToHistory(opponentName: string, attackRole: number, opponentDefenseChance: number, successfulAttack: boolean, damage: number){
-        battleHistory.push({
-            attacker: "Du",
-            defender: opponentName,
-            diceroll: attackRole,
-            defense: opponentDefenseChance,
-            successfulAttack: successfulAttack,
-            damage: damage
-        })
+    /* Function areAllOpponentsDead
+     * We simply check if all opponents in the current battle are dead */
+    function areAllOpponentsDead(hpLeft: number){
+        // If current opponent is alive we return false
+        if(hpLeft){
+            return false
+        }else if(currentBattle.opponentlist.length > 1){
+            let allDead = true
+            // Iterate all opponents except the current
+            currentBattle.opponentlist.forEach((opponent, index) => {
+                if(index !== currentBattle.currentOpponent && opponent.hp > 0)
+                    allDead = false                
+            })
+            return allDead
+        }
+        return true // If the only opponent is dead
     }
 
-    function getAttackTextFromHistory(index: number){
-        const attack = battleHistory[battleHistory.length - index]
-        return (attack) ? `${attack.attacker} slår ${defaultAttackChance} och resultatet blir ${attack.diceroll}. ${attack.defender} har ${attack.defense} i försvar` : false
+    /* Function setBattleStateToHistory
+     * A dispatch to switch to next battle phase */
+    function setBattleState(state: EnumBattleStates){
+        dispatch(setBattleStatus(state)) // Go to next phase (attack)
     }
 
+
+    function calculateHpLeft(damage: number){
+        let newHp = currentOpponent.hp - damage    
+        return (newHp > 0) ? newHp : 0        
+    }
+
+
+    function getDamageText(damage: number, newHp: number){
+        const text = <span>Du gör {damage} i skada.</span>
+
+        if(newHp > 0)
+            return <span>{text} {currentOpponent.name} har {newHp} kroppspoäng kvar.</span>
+        else
+            return <span>{text} {currentOpponent.name} är död.</span>
+    }   
 
     function getHitOrMissText(successfulAttack: boolean){
         const hitOrMiss = (successfulAttack) ? "träffar" : "missar"
-        return `Du ${hitOrMiss} ${currentOpponent.name}`        
+        return <b>Du {hitOrMiss} {currentOpponent.name}!</b>    
     }
 
 
     return (
-        <section>
-            <h4>Attack</h4> 
-            <ol>
-                <li>Slag, träffar vi?</li>
-                <li>Visa skada</li>
-                <li>Är motståndaren fortfarande vid liv?</li>
-            </ol>
-            {doAttack()}
-            <button onClick={doAttack}>Attackera</button>
-            
+        <section> 
+            {content} 
         </section>                
     )
 }
