@@ -12,7 +12,8 @@ export const currentBattleSlice = createSlice({
         blockable: true,        
         currentOpponent: null,
         battleModifiers: {
-            innerForce: false
+            innerForce: false,
+            block: false
         },
         opponentlist: [{ 
             name: "",

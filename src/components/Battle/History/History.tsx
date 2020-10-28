@@ -2,6 +2,7 @@ import React from 'react';
 
 import styles from './History.module.scss'
 import { IBattleHistoryRecord } from 'assets/interfaces';
+import { EnumAttackResult } from 'assets/enums';
 
 interface IProps {
     history: IBattleHistoryRecord[]
@@ -11,16 +12,30 @@ function History(props: IProps) {
     if(props.history.length === 0)
         return null
 
+    function resultText(attackResult: EnumAttackResult){
+        switch(attackResult){
+            case EnumAttackResult.hit:
+                return "Träff"
+                break;
+            case EnumAttackResult.miss:
+                return "Miss"
+                break;
+            case EnumAttackResult.block:
+                return "Block"
+                break;
+        }
+    }
+
     function getRow(battle: IBattleHistoryRecord){
         return (
             <tr key={battle.timeStamp}>
                 <td>{battle.attacker}</td>
                 <td>{battle.defender}</td>
-                <td>2T6 = {battle.attackRoll}</td>
+                <td>2T6 = {battle.attack}</td>
                 <td>{battle.defense}</td>
-                <td>{battle.successful ? "Träff" : "Miss"}</td>
-                {battle.successful ?
-                    <td>{battle.damage} = {battle.damageRoll}</td>
+                <td>{resultText(battle.result)}</td>
+                {battle.result === EnumAttackResult.hit ?
+                    <td>{battle.damageRoll} = {battle.damage}</td>
                 :
                     <td></td>
                 }
@@ -31,7 +46,7 @@ function History(props: IProps) {
 
     return (
         <section className={styles.history}>
-            <h4>Historik</h4>
+            <h4>Stridshistorik</h4>
             <table>
                 <thead>
                     <tr>

@@ -26,12 +26,13 @@ export const playerSlice = createSlice({
         }
      } as IInitialState,
     reducers: {
-        setHpByAmount(state, action: PayloadAction<number>) {
-            const new_hp = state.hp += action.payload
-
-            if(new_hp >= state.hp_max) state.hp = state.hp_max
-            else if(new_hp <= 0) state.hp = 0
-            else state.hp = action.payload
+        decreaseHp(state, action: PayloadAction<number>) {
+            const new_hp = state.hp - action.payload
+            state.hp = (new_hp <= 0) ? state.hp : new_hp
+        },
+        increaseHp(state, action: PayloadAction<number>) {
+            const new_hp = state.hp + action.payload
+            state.hp = (new_hp >= state.hp_max) ? state.hp_max : new_hp 
         },
         setDefense(state, action: PayloadAction<number>) {
             state.defense = action.payload
@@ -56,5 +57,5 @@ export const getPlayerDamage = (state: RootState) => state.player.damage
 export const getPlayerInnerForce = (state: RootState) => state.player.innerForce
 export const getPlayerAbilities = (state: RootState) => state.player.abilities
 
-export const { setHpByAmount, setDefense, setDamage, addAbility, decreaseInnerForce } = playerSlice.actions
+export const { decreaseHp, increaseHp, setDefense, setDamage, addAbility, decreaseInnerForce } = playerSlice.actions
 export default playerSlice.reducer

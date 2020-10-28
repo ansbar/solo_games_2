@@ -5,6 +5,7 @@ import { useSelector } from 'react-redux'
 import ChooseOpponent from './ChooseOpponent/ChooseOpponent';
 import InnerForce from './InnerForce/InnerForce'
 import Attack from './Attack/Attack'
+import Defend from './Defend/Defend'
 import History from './History/History'
 import { EnumBattleStates } from 'assets/enums';
 import { IBattleHistoryRecord } from 'assets/interfaces'
@@ -19,31 +20,6 @@ function Battle(props: IProps) {
     const [battleHistory, setBattleHistory] = useState([] as IBattleHistoryRecord[])     
     let components
 
-    useEffect(() => {        
-        saveBattleToHistory({
-            timeStamp: 2,
-            attacker: "Hämnaren",
-            defender: "Ung kapten",
-            attackRoll: 7,
-            defense: 4,
-            successful: true,
-            damageRoll: 5,
-            damage: "1T6",
-            hp: "7/12"
-        })
-        saveBattleToHistory({
-            timeStamp: 1,
-            attacker: "Ung kapten",
-            defender: "Hämnaren",
-            attackRoll: 9,
-            defense: 7,
-            successful: true,
-            damageRoll: 6,
-            damage: "1T6+2",
-            hp: "14/20"
-        })
-    }, [])
-
     function saveBattleToHistory(battleObj: IBattleHistoryRecord){
         setBattleHistory(battleHistory => [battleObj, ...battleHistory]);
     }
@@ -56,7 +32,10 @@ function Battle(props: IProps) {
             components = <InnerForce attackType={currentBattle.attackType} />
             break;
         case EnumBattleStates.attack:
-            components = <Attack stillAliveText={props.stillAliveText} onSaveToHistory={saveBattleToHistory} />
+            components = <Attack onSaveToHistory={saveBattleToHistory} stillAliveText={props.stillAliveText}  />
+            break;
+        case EnumBattleStates.defend:
+            components = <Defend onSaveToHistory={saveBattleToHistory} />
             break;
     }
 

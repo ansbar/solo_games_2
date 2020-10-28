@@ -43,3 +43,9 @@ export enum EnumAttackType {
     throw = "throw",
     instant = "instant"
 }
+
+export enum EnumAttackResult {
+    hit = "hit",
+    miss = "miss",
+    block = "block",
+}

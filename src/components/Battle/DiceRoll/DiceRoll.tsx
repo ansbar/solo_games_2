@@ -15,7 +15,7 @@ function DiceRoll(r: string) {
         result += Math.floor((Math.random() * sides) + 1);
     }    
 
-    // Add extra (+1) if applicable
+    // Add extra (+n) if applicable
     if (split_plus[1]) extra = parseInt(split_plus[1])
         result += extra
 

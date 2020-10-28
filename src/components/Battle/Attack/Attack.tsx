@@ -3,7 +3,7 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import diceRoll from '../DiceRoll/DiceRoll'
 import Button from 'components/Utils/Button/Button'
-import { EnumBattleStates } from 'assets/enums'
+import { EnumBattleStates, EnumAttackResult } from 'assets/enums'
 import { IBattleHistoryRecord } from 'assets/interfaces'
 import { getCurrentBattle, decreaseOpponentHP, setBattleStatus } from 'components/BattleOverview/CurrentBattleSlice'
 
@@ -16,7 +16,7 @@ function Attack(props: IAttackProps) {
     const loadOnce = useRef(false)
     const dispatch = useDispatch()  
     const [content, setContent] = useState(<p></p>)      
-    const defaultAttackChance = "2T6"
+    const attackRoll = "2T6"
     const currentBattle = useSelector(getCurrentBattle)
     const currentOpponent = currentBattle.opponentlist[currentBattle.currentOpponent || 0]
     
@@ -36,15 +36,15 @@ function Attack(props: IAttackProps) {
     /* Function doAttack
      * Main track. We run this function once per activation */
     function doAttack(){        
-        const attackRoll = diceRoll(defaultAttackChance)
+        const attack = diceRoll(attackRoll)
         const defense = currentOpponent.opponent_defense
-        const successfulAttack = attackRoll > defense
-        const damage = (successfulAttack) ? diceRoll(currentOpponent.player_damage) : 0
+        let result = attack > defense ? EnumAttackResult.hit : EnumAttackResult.miss
+        const damage = (result === EnumAttackResult.hit) ? diceRoll(currentOpponent.player_damage) : 0
         let damageText
         let hpLeft = calculateHpLeft(damage)
 
         // If the opponent where hit, role for damage and assign it.
-        if(successfulAttack){     
+        if(result === EnumAttackResult.hit){     
             dispatch(decreaseOpponentHP(damage))  
             damageText = getDamageText(damage, hpLeft)
         }
@@ -54,17 +54,17 @@ function Attack(props: IAttackProps) {
             timeStamp: Date.now(),
             attacker: "Hämnaren",
             defender: currentOpponent.name,
-            attackRoll: attackRoll,
+            attack: attack,
             defense: defense,
-            successful: successfulAttack,
-            damageRoll: damage,
-            damage: currentOpponent.player_damage,
+            result: result,
+            damage: damage,
+            damageRoll: currentOpponent.player_damage,
             hp: hpLeft + "/" + currentOpponent.hpMax
         } as IBattleHistoryRecord)
 
         setContent(
             <div>
-                {getHitOrMissText(successfulAttack)}
+                {getHitOrMissText(result === EnumAttackResult.hit)}
                 <br/>{damageText}
                 {getContinuation(hpLeft)}
             </div>
