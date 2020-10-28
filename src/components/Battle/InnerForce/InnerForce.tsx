@@ -3,10 +3,10 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import Tooltip from 'components/Utils/Tooltip/Tooltip'
 import Button from 'components/Utils/Button/Button'
-import { setBattleStatus, setBattleModifiers } from 'components/BattleOverview/CurrentBattleSlice'
+import { setBattleStatus, toggleBattleModifier } from 'components/BattleOverview/CurrentBattleSlice'
 import { getPlayerInnerForce, decreaseInnerForce } from 'app/playerSlice';
 import { getHelpTexts, getGeneralTexts } from 'app/LanguageSlice';
-import { EnumAttackType, EnumBattleStates } from 'assets/enums'
+import { EnumAttackType, EnumBattleModifiers, EnumBattleStates } from 'assets/enums'
 
 interface IChooseOpponentProps {
     attackType: EnumAttackType
@@ -29,7 +29,7 @@ function InnerForce(props: IChooseOpponentProps) {
      * Some store dispatchs to adjust for use of inner force */
     function setInnerForce(useInnerForce: boolean){
         if(useInnerForce) dispatch(decreaseInnerForce()) // Remove one from inner force        
-        dispatch(setBattleModifiers({"innerForce": useInnerForce})) // Add inner force to the battle modifiers so player can benifit from it in next attack   
+        dispatch(toggleBattleModifier(EnumBattleModifiers.innerForce)) // Set inner force to the battle modifiers so player can benifit from it in next attack   
         dispatch(setBattleStatus(EnumBattleStates.attack)) // Go to next phase (attack)
     }
 

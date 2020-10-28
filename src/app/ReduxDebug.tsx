@@ -72,7 +72,7 @@ function ReduxDebug() {
                 </article>
             }
             <article>
-            <h4>Player</h4>
+                <h4>Player</h4>
                 <table>
                     <tbody>
                         <tr>
@@ -81,6 +81,24 @@ function ReduxDebug() {
                         <tr>
                             <td>Innerforce</td>
                             <td>{playerInnerForce}</td>
+                        </tr>
+                    </tbody>
+                </table>
+            </article>
+            <article>
+                <h4>Battle modifiers</h4>
+                <table>
+                    <tbody>
+                        <tr>
+                            <td colSpan={2}></td>
+                        </tr>
+                        <tr>
+                            <td>Innerforce</td>
+                            <td>{currentBattle.battleModifiers.innerForce ? "True" : "False"}</td>
+                        </tr>
+                        <tr>
+                            <td>Block</td>
+                            <td>{currentBattle.battleModifiers.block ? "True" : "False"}</td>
                         </tr>
                     </tbody>
                 </table>

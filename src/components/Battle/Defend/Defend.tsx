@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import diceRoll from '../DiceRoll/DiceRoll'
 import Block from './Block/Block'
 import Button from 'components/Utils/Button/Button'
-import { EnumBattleStates, EnumAttackResult, EnumAttackType } from 'assets/enums'
+import { EnumBattleStates, EnumAttackResult } from 'assets/enums'
 import { IBattleHistoryRecord } from 'assets/interfaces'
 import { getCurrentBattle, setCurrentOpponent, setBattleStatus } from 'components/BattleOverview/CurrentBattleSlice'
 import { getPlayerHp, getPlayerHpMax, decreaseHp} from 'app/playerSlice'
@@ -21,7 +21,7 @@ function Defend(props: IProps) {
     const playerHpMax = useSelector(getPlayerHpMax)
     const currentBattle = useSelector(getCurrentBattle)
     let playerPrivateHp = playerHp
-console.log("GO")
+
     let attackRoll = "2T6"    
     let hasAlreadyBlocked = false
     
@@ -56,7 +56,7 @@ console.log("GO")
         const attack = diceRoll(attackRoll)
         const defense = o.player_defense
         let result = attack > o.player_defense ? EnumAttackResult.hit : EnumAttackResult.miss
-        const damage = diceRoll(o.player_damage)        
+        const damage = diceRoll(o.opponent_damage)        
 
         // If opponent misses we end here
         if (result === EnumAttackResult.miss){
@@ -125,10 +125,9 @@ console.log("GO")
         function endDefense(text: JSX.Element){
             const firstOpponentIndex = findNextOpponent(oIndex + 1)   
 
-            console.log("endDefense:", damage, playerPrivateHp, playerHp)
             // Save battle to history. The function is in parent component
             props.onSaveToHistory({
-                timeStamp: Date.now(),
+                key: Date.now(),
                 attacker: o.name,
                 defender: "Hämnaren",
                 attack: attack,
@@ -145,9 +144,15 @@ console.log("GO")
                     {playerPrivateHp > 0 ?
                         <p>
                             {firstOpponentIndex >= 0 ?
-                                <Button onClick={() => doDefend(firstOpponentIndex)} text="Nästa attackerare" />
+                                <Button 
+                                    onClick={() => doDefend(firstOpponentIndex)} 
+                                    className="cta" 
+                                    text="Nästa attackerare" />
                             :
-                                <Button onClick={() => setBattleState(EnumBattleStates.chooseOpponent)} text="Gå vidare" />
+                                <Button 
+                                    onClick={() => setBattleState(EnumBattleStates.chooseOpponent)} 
+                                    className="cta" 
+                                    text="Gå vidare" />
                             }
                         </p>                           
                     :

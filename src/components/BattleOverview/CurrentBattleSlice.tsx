@@ -1,7 +1,7 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit'
-import { ICurrentBattle, ICurrentBattleModifiers } from 'assets/interfaces'
+import { ICurrentBattle } from 'assets/interfaces'
 import { RootState } from 'app/rootReducer'
-import { EnumOpponents, EnumAttackType, EnumBattleStates} from 'assets/enums'
+import { EnumOpponents, EnumAttackType, EnumBattleStates, EnumBattleModifiers} from 'assets/enums'
 
 export const currentBattleSlice = createSlice({
     name: 'currentBattle',
@@ -33,8 +33,10 @@ export const currentBattleSlice = createSlice({
         setBattleStatus(state, action: PayloadAction<EnumBattleStates>) {
             state.state = action.payload
         },
-        setBattleModifiers(state, action: PayloadAction<ICurrentBattleModifiers>) {
-            state.battleModifiers = action.payload
+        toggleBattleModifier(state, action: PayloadAction<EnumBattleModifiers>) {
+            console.log(action.payload, state.battleModifiers[action.payload])
+            state.battleModifiers[action.payload] = !state.battleModifiers[action.payload]
+            console.log(action.payload, state.battleModifiers[action.payload])
         },
         setCurrentOpponent(state, action: PayloadAction<number>) {
             state.currentOpponent = action.payload
@@ -55,7 +57,7 @@ export const {
     setCurrentBattle, 
     setBattleStatus, 
     setCurrentOpponent, 
-    setBattleModifiers, 
+    toggleBattleModifier, 
     decreaseOpponentHP 
 } = currentBattleSlice.actions
 export default currentBattleSlice.reducer

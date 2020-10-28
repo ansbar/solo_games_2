@@ -3,22 +3,35 @@ import { useSelector, useDispatch } from 'react-redux'
 
 import diceRoll from '../DiceRoll/DiceRoll'
 import Button from 'components/Utils/Button/Button'
-import { EnumBattleStates, EnumAttackResult } from 'assets/enums'
-import { IBattleHistoryRecord } from 'assets/interfaces'
-import { getCurrentBattle, decreaseOpponentHP, setBattleStatus } from 'components/BattleOverview/CurrentBattleSlice'
 
-interface IAttackProps {
+import { IBattleHistoryRecord } from 'assets/interfaces'
+import { EnumBattleStates, EnumAttackResult, EnumBattleModifiers } from 'assets/enums'
+import { getCurrentBattle, decreaseOpponentHP, setBattleStatus, toggleBattleModifier } from 'components/BattleOverview/CurrentBattleSlice'
+
+interface IProps {
     onSaveToHistory: any
     stillAliveText: string
 }
 
-function Attack(props: IAttackProps) {   
-    const loadOnce = useRef(false)
-    const dispatch = useDispatch()  
-    const [content, setContent] = useState(<p></p>)      
-    const attackRoll = "2T6"
+function Attack(props: IProps) {   
+    const dispatch = useDispatch()
+    const loadOnce = useRef(false)      
+    const [content, setContent] = useState(<p></p>)
+    
     const currentBattle = useSelector(getCurrentBattle)
-    const currentOpponent = currentBattle.opponentlist[currentBattle.currentOpponent || 0]
+    const o = currentBattle.opponentlist[currentBattle.currentOpponent || 0]
+    const battleHistoryRecord: IBattleHistoryRecord = {
+        key: Date.now(),
+        attacker: "Hämnaren",
+        defender: o.name,
+        modifier: null,
+        attack: 0,
+        defense: 0,
+        result: EnumAttackResult.none,
+        damage: 0,
+        damageRoll: o.player_damage,
+        hp: ""
+    }
     
 
     useEffect(() => {
@@ -36,55 +49,79 @@ function Attack(props: IAttackProps) {
     /* Function doAttack
      * Main track. We run this function once per activation */
     function doAttack(){        
-        const attack = diceRoll(attackRoll)
-        const defense = currentOpponent.opponent_defense
-        let result = attack > defense ? EnumAttackResult.hit : EnumAttackResult.miss
-        const damage = (result === EnumAttackResult.hit) ? diceRoll(currentOpponent.player_damage) : 0
+        const attack = calculateAttack()
+        const defense = o.opponent_defense
+        let result = attack > defense
+        const damage = calculateDamage()
         let damageText
         let hpLeft = calculateHpLeft(damage)
 
-        // If the opponent where hit, role for damage and assign it.
-        if(result === EnumAttackResult.hit){     
-            dispatch(decreaseOpponentHP(damage))  
-            damageText = getDamageText(damage, hpLeft)
-        }
+        // If the opponent where hit, assign damage and history
+        if(result){     
+            dispatch(decreaseOpponentHP(damage)) 
+            damageText = getDamageText(damage, hpLeft)  
 
-        // Save to history. The function is in parent component
-        props.onSaveToHistory({
-            timeStamp: Date.now(),
-            attacker: "Hämnaren",
-            defender: currentOpponent.name,
-            attack: attack,
-            defense: defense,
-            result: result,
-            damage: damage,
-            damageRoll: currentOpponent.player_damage,
-            hp: hpLeft + "/" + currentOpponent.hpMax
-        } as IBattleHistoryRecord)
+            battleHistoryRecord.damage = damage
+            battleHistoryRecord.hp = hpLeft + "/" + o.hpMax                      
+        }        
 
         setContent(
             <div>
-                {getHitOrMissText(result === EnumAttackResult.hit)}
+                {getHitOrMissText(result)}
                 <br/>{damageText}
-                {getContinuation(hpLeft)}
+                {endAttack(hpLeft)}
             </div>
         )
     }
 
-    /* Function getContinuation
+    /* Function calculateAttack()
+     * Uses the standard 2T6 for attack. */
+    function calculateAttack(){
+        let attack = diceRoll("2T6")
+
+        // Subtract 2 from the result if players tried to block
+        if(currentBattle.battleModifiers.block){
+            attack -= 2
+            toggleBattleModifier(EnumBattleModifiers.block)
+        }
+        return attack
+    }
+
+
+    /* Function calculateDamage()
+     * Double damage made if inner force was used */
+    function calculateDamage(){
+        let damage = diceRoll(o.player_damage) 
+
+        // Doubles the damage result if player used inner force
+        if(currentBattle.battleModifiers.innerForce){
+            damage = damage * 2
+            toggleBattleModifier(EnumBattleModifiers.innerForce)
+            
+            battleHistoryRecord.damageRoll = o.player_damage + "x2"
+            battleHistoryRecord.modifier = EnumBattleModifiers.innerForce
+        }
+        return damage
+    }
+
+
+    /* Function endAttack
      * What happends after the attack?
-     * If there are opponents left alive we go to defend phase
-     * If all are dead we continue the story */
-    function getContinuation(hpLeft: number){
+     * -If there are opponents left alive we go to defend phase
+     * -If all are dead we continue the story */
+    function endAttack(hpLeft: number){
+        // Save battle to history. The function is in parent component.
+        props.onSaveToHistory(battleHistoryRecord)
+
         if(areAllOpponentsDead(hpLeft))
-            return <Button onClick={() => setBattleState(EnumBattleStates.win)} text={"Försvara dig"} className={"cta"} />
+            return <Button onClick={() => dispatch(setBattleStatus(EnumBattleStates.win))} text={"Gå vidare"} className={"cta"} />
         
         return (
             <div>
                 <br/>
                 {props.stillAliveText}<br/>
                 <p>
-                    <Button onClick={() => setBattleState(EnumBattleStates.defend)} text={"Försvara dig"} className={"cta"} />
+                    <Button onClick={() => dispatch(setBattleStatus(EnumBattleStates.defend))} text={"Försvara dig"} className={"cta"} />
                 </p>
             </div>
         )
@@ -108,15 +145,9 @@ function Attack(props: IAttackProps) {
         return true // If the only opponent is dead
     }
 
-    /* Function setBattleStateToHistory
-     * A dispatch to switch to next battle phase */
-    function setBattleState(state: EnumBattleStates){
-        dispatch(setBattleStatus(state)) // Go to next phase (attack)
-    }
-
 
     function calculateHpLeft(damage: number){
-        let newHp = currentOpponent.hp - damage    
+        let newHp = o.hp - damage    
         return (newHp > 0) ? newHp : 0        
     }
 
@@ -125,14 +156,15 @@ function Attack(props: IAttackProps) {
         const text = <span>Du gör {damage} i skada.</span>
 
         if(newHp > 0)
-            return <span>{text} {currentOpponent.name} har {newHp} kroppspoäng kvar.</span>
+            return <span>{text} {o.name} har {newHp} kroppspoäng kvar.</span>
         else
-            return <span>{text} {currentOpponent.name} är död.</span>
+            return <span>{text} {o.name} är död.</span>
     }   
 
-    function getHitOrMissText(successfulAttack: boolean){
-        const hitOrMiss = (successfulAttack) ? "träffar" : "missar"
-        return <b>Du {hitOrMiss} {currentOpponent.name}!</b>    
+
+    function getHitOrMissText(hit: boolean){
+        const hitOrMiss = (hit) ? "träffar" : "missar"
+        return <b>Du {hitOrMiss} {o.name}!</b>    
     }
 
 

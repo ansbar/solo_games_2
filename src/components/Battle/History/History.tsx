@@ -13,24 +13,25 @@ function History(props: IProps) {
         return null
 
     function resultText(attackResult: EnumAttackResult){
+        let text
         switch(attackResult){
             case EnumAttackResult.hit:
-                return "Träff"
+                text = "Träff"
                 break;
             case EnumAttackResult.miss:
-                return "Miss"
+                text = "Miss"
                 break;
             case EnumAttackResult.block:
-                return "Block"
+                text = "Block"
                 break;
         }
+        return text
     }
 
     function getRow(battle: IBattleHistoryRecord){
         return (
-            <tr key={battle.timeStamp}>
-                <td>{battle.attacker}</td>
-                <td>{battle.defender}</td>
+            <tr key={battle.key}>
+                <td>{battle.attacker} - {battle.defender}</td>
                 <td>2T6 = {battle.attack}</td>
                 <td>{battle.defense}</td>
                 <td>{resultText(battle.result)}</td>
@@ -50,8 +51,7 @@ function History(props: IProps) {
             <table>
                 <thead>
                     <tr>
-                        <th>Angripare</th>
-                        <th>Försvarare</th>
+                        <th></th>
                         <th>Träffslag</th>
                         <th>Försvar</th>
                         <th>Resultat</th>

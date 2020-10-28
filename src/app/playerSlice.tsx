@@ -19,7 +19,7 @@ export const playerSlice = createSlice({
         hp_max: 20,
         hp: 20,
         defense: 0,
-        innerForce: 0,
+        innerForce: 5,
         damage: "",
         abilities: {
             acrobat: true
