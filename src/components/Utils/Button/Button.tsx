@@ -9,10 +9,10 @@ interface ITextProps {
     onClick: any
     disabled?: boolean
 }
-
+//styles[props.className || styles.button]
 function Button(props: ITextProps) {
     return (
-        <button disabled={props.disabled} className={styles[props.className || ""]} onClick={props.onClick}>
+        <button disabled={props.disabled} className={`${styles.button} ${styles[props.className || ""]}`} onClick={props.onClick}>
             {props.text}
         </button>
     )

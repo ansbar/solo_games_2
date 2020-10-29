@@ -44,13 +44,6 @@ export enum EnumAttackType {
     instant = "instant"
 }
 
-export enum EnumAttackResult {
-    none = "none",
-    hit = "hit",
-    miss = "miss",
-    block = "block",
-}
-
 export enum EnumBattleModifiers { 
     innerForce = "innerForce",
     block = "block"

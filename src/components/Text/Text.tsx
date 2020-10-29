@@ -12,7 +12,6 @@ function Text() {
             {textArray.map((value, index) => {
                return <p key={index}>{value}</p>
             })}
-            <hr/>
         </section>
     )
 }

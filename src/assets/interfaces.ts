@@ -1,4 +1,4 @@
-import { EnumAbilities, EnumItems, EnumAttackType, EnumOpponents, EnumBattleStates, EnumAttackResult, EnumBattleModifiers } from './enums'
+import { EnumAbilities, EnumItems, EnumAttackType, EnumOpponents, EnumBattleStates, EnumBattleModifiers } from './enums'
 
 export interface IPages {
     [index: number]: IPage
@@ -121,13 +121,16 @@ export interface ICurrentBattleOpponents {
 }
 
 export interface IBattleHistoryRecord {
-    key: number
+    key: number    
     attacker: string
     defender: string
-    modifier: EnumBattleModifiers | null
+    modifiers: EnumBattleModifiers[]
+    attackRoll: string
     attack: number
     defense: number
-    result: EnumAttackResult
+    hit: boolean
+    blockRoll: string
+    block: number
     damageRoll: string
     damage: number
     hp: string

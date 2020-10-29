@@ -1,4 +1,4 @@
-html, body {
+html, body, .link {
     font-size: 18px;
     line-height: 1.3em;
     font-family: Georgia, 'Times New Roman', Times, serif;
@@ -7,24 +7,40 @@ html, body {
 body {
     padding: 2rem;    
 
-    ul {
-        display: block!important;
-        margin: 0;
-        padding-left: 1em;
-        list-style-type: circle;
-
-        + ul {
-          margin-top: 0.5em;
-        }
-
-        li::first-letter {
-            text-transform: uppercase
-        }
-    }
-
     > div {
         max-width: 700px;
         margin: 0 auto;
+    }
+}
+
+ul {
+    display: block!important;
+    margin: 0;
+    padding-left: 1em;
+    list-style-type: circle;
+
+    + ul {
+      margin-top: 0.5em;
+    }
+
+    li {
+        margin-bottom: 0.5em;
+    }
+
+    li::first-letter {
+        text-transform: uppercase
+    }
+}
+
+.link {
+    padding: 0;
+    border: 0;
+    background: 0;
+    color: #1967dd;
+    cursor: pointer;
+    
+    &:focus {
+        outline: none;
     }
 }
 

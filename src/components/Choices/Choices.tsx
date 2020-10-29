@@ -35,7 +35,7 @@ function Choices(props: IChoicesProps) {
         return <li key={index}>{link}</li>
     }
 
-    if(currentBattle.state !== EnumBattleStates.none)
+    if(currentBattle.state !== EnumBattleStates.none && currentBattle.state !== EnumBattleStates.pending)
         return null
 
     if(!props.choices?.length)

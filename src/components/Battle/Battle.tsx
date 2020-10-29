@@ -41,8 +41,10 @@ function Battle(props: IProps) {
 
     return (
         <section>
-            {components}
-            <History history={battleHistory} />
+            {components}      
+            { currentBattle.state !== EnumBattleStates.pending &&
+                <History history={battleHistory} />
+            }      
         </section>                
     )
 }

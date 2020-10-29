@@ -5,8 +5,8 @@ import diceRoll from '../DiceRoll/DiceRoll'
 import Button from 'components/Utils/Button/Button'
 
 import { IBattleHistoryRecord } from 'assets/interfaces'
-import { EnumBattleStates, EnumAttackResult, EnumBattleModifiers } from 'assets/enums'
-import { getCurrentBattle, decreaseOpponentHP, setBattleStatus, toggleBattleModifier } from 'components/BattleOverview/CurrentBattleSlice'
+import { EnumBattleStates, EnumBattleModifiers } from 'assets/enums'
+import { getCurrentBattle, decreaseOpponentHP, setBattleStatus, setBattleModifier } from 'components/BattleOverview/CurrentBattleSlice'
 
 interface IProps {
     onSaveToHistory: any
@@ -24,10 +24,13 @@ function Attack(props: IProps) {
         key: Date.now(),
         attacker: "Hämnaren",
         defender: o.name,
-        modifier: null,
+        modifiers: [],
+        attackRoll: "2T6",
         attack: 0,
         defense: 0,
-        result: EnumAttackResult.none,
+        hit: false,        
+        block: 0,
+        blockRoll: "",
         damage: 0,
         damageRoll: o.player_damage,
         hp: ""
@@ -49,15 +52,20 @@ function Attack(props: IProps) {
     /* Function doAttack
      * Main track. We run this function once per activation */
     function doAttack(){        
-        const attack = calculateAttack()
+        const attack = calculateAttack()        
         const defense = o.opponent_defense
-        let result = attack > defense
         const damage = calculateDamage()
+        let hit = attack > defense
+
+        battleHistoryRecord.attack = attack
+        battleHistoryRecord.defense = defense        
+        battleHistoryRecord.hit = hit
+        
         let damageText
         let hpLeft = calculateHpLeft(damage)
 
         // If the opponent where hit, assign damage and history
-        if(result){     
+        if(hit){     
             dispatch(decreaseOpponentHP(damage)) 
             damageText = getDamageText(damage, hpLeft)  
 
@@ -67,7 +75,7 @@ function Attack(props: IProps) {
 
         setContent(
             <div>
-                {getHitOrMissText(result)}
+                {getHitOrMissText(hit)}
                 <br/>{damageText}
                 {endAttack(hpLeft)}
             </div>
@@ -78,11 +86,12 @@ function Attack(props: IProps) {
      * Uses the standard 2T6 for attack. */
     function calculateAttack(){
         let attack = diceRoll("2T6")
-
+        
         // Subtract 2 from the result if players tried to block
         if(currentBattle.battleModifiers.block){
             attack -= 2
-            toggleBattleModifier(EnumBattleModifiers.block)
+            battleHistoryRecord.attackRoll = "2T6-2"
+            dispatch(setBattleModifier({modifier: EnumBattleModifiers.block, value: false}))
         }
         return attack
     }
@@ -96,10 +105,10 @@ function Attack(props: IProps) {
         // Doubles the damage result if player used inner force
         if(currentBattle.battleModifiers.innerForce){
             damage = damage * 2
-            toggleBattleModifier(EnumBattleModifiers.innerForce)
+            dispatch(setBattleModifier({modifier: EnumBattleModifiers.innerForce, value: false}))
             
             battleHistoryRecord.damageRoll = o.player_damage + "x2"
-            battleHistoryRecord.modifier = EnumBattleModifiers.innerForce
+            battleHistoryRecord.modifiers.push(EnumBattleModifiers.innerForce)
         }
         return damage
     }

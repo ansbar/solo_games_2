@@ -2,7 +2,7 @@ import React from 'react';
 
 import styles from './History.module.scss'
 import { IBattleHistoryRecord } from 'assets/interfaces';
-import { EnumAttackResult } from 'assets/enums';
+import { EnumBattleModifiers } from 'assets/enums';
 
 interface IProps {
     history: IBattleHistoryRecord[]
@@ -12,35 +12,33 @@ function History(props: IProps) {
     if(props.history.length === 0)
         return null
 
-    function resultText(attackResult: EnumAttackResult){
-        let text
-        switch(attackResult){
-            case EnumAttackResult.hit:
-                text = "Träff"
-                break;
-            case EnumAttackResult.miss:
-                text = "Miss"
-                break;
-            case EnumAttackResult.block:
-                text = "Block"
-                break;
+    function resultText(hit: number, blocked: boolean){
+        if (blocked && !hit){
+            return "Block"
+        } else if (hit){
+            return "Träff"
         }
-        return text
+        return "Miss"
     }
 
-    function getRow(battle: IBattleHistoryRecord){
+    function getRow(b: IBattleHistoryRecord){
         return (
-            <tr key={battle.key}>
-                <td>{battle.attacker} - {battle.defender}</td>
-                <td>2T6 = {battle.attack}</td>
-                <td>{battle.defense}</td>
-                <td>{resultText(battle.result)}</td>
-                {battle.result === EnumAttackResult.hit ?
-                    <td>{battle.damageRoll} = {battle.damage}</td>
+            <tr key={b.key}>
+                <td>{b.attacker} - {b.defender}</td>
+                <td>({b.attackRoll}) {b.attack} {b.hit ? '>' : '<'} {b.defense}</td>
+                <td>{resultText(b.damage, b.modifiers.includes(EnumBattleModifiers.block))}</td>
+                {b.block ?
+                    <td>({b.blockRoll}) {b.block} {b.hit ? '<' : '>'} {b.defense}</td>
                 :
-                    <td></td>
+                    <td/>
                 }
-                <td>{battle.hp}</td>
+                <td className={b.modifiers.includes(EnumBattleModifiers.innerForce) ? styles.dot : ""}/>
+                {b.hit && b.damageRoll ?
+                    <td>{b.damage} ({b.damageRoll})</td>
+                :
+                    <td/>
+                }
+                <td>{b.hp}</td>
             </tr>
         )
     }    
@@ -51,10 +49,11 @@ function History(props: IProps) {
             <table>
                 <thead>
                     <tr>
-                        <th></th>
-                        <th>Träffslag</th>
-                        <th>Försvar</th>
+                        <th>Strid mellan</th>
+                        <th>Träff/Försvar</th>
                         <th>Resultat</th>
+                        <th>Block</th>
+                        <th>IF</th>
                         <th>Skada</th>
                         <th>Liv</th>
                     </tr>

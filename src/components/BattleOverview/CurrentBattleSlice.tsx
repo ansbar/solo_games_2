@@ -33,10 +33,10 @@ export const currentBattleSlice = createSlice({
         setBattleStatus(state, action: PayloadAction<EnumBattleStates>) {
             state.state = action.payload
         },
-        toggleBattleModifier(state, action: PayloadAction<EnumBattleModifiers>) {
-            console.log(action.payload, state.battleModifiers[action.payload])
-            state.battleModifiers[action.payload] = !state.battleModifiers[action.payload]
-            console.log(action.payload, state.battleModifiers[action.payload])
+        setBattleModifier(state, action: PayloadAction<{modifier: EnumBattleModifiers, value: boolean}>) {
+            const modifier = action.payload.modifier
+            const value = action.payload.value
+            state.battleModifiers[modifier] = value
         },
         setCurrentOpponent(state, action: PayloadAction<number>) {
             state.currentOpponent = action.payload
@@ -57,7 +57,7 @@ export const {
     setCurrentBattle, 
     setBattleStatus, 
     setCurrentOpponent, 
-    toggleBattleModifier, 
+    setBattleModifier, 
     decreaseOpponentHP 
 } = currentBattleSlice.actions
 export default currentBattleSlice.reducer

@@ -48,13 +48,13 @@ function App(props: IAppProps){
                     generalTexts={generalTexts}
                 />
             }
-            <Text />  
-            <Battle stillAliveText={stillAliveText} />
+            <Text />            
             <Choices 
                 abilitiesTexts={abilitiesTexts} 
                 choicesTexts={choicesTexts}                 
                 choices={pages[page].choices}
             />
+            <Battle stillAliveText={stillAliveText} />
             <br/><br/><hr/>
             <ReduxDebug />
         </div>           

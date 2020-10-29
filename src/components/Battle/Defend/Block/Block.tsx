@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import diceRoll from '../../DiceRoll/DiceRoll'
 import Tooltip from 'components/Utils/Tooltip/Tooltip'
 import Button from 'components/Utils/Button/Button'
-import { toggleBattleModifier } from 'components/BattleOverview/CurrentBattleSlice'
+import { setBattleModifier } from 'components/BattleOverview/CurrentBattleSlice'
 import { getHelpTexts } from 'app/LanguageSlice';
 import { EnumBattleModifiers } from 'assets/enums'
 
@@ -21,21 +21,26 @@ function Block(props: IProps) {
     /* Function setBlock
      * Some store dispatchs to adjust for use of block */
     function setBlock(useBlock: boolean){
+        const blockRoll = "2T6"
         let successfulBlock = false
+        let block = 0
 
         /* If player uses block we roll to see if succesful.
          * If so, toggle battle modifier */
         if(useBlock){
-            const blockRoll = diceRoll("2T6")
-            console.log(blockRoll,props.defense)
-            successfulBlock = blockRoll < props.defense               
+            block = diceRoll(blockRoll)
+            console.log(block,props.defense)
+            successfulBlock = block < props.defense               
         }    
 
-        dispatch(toggleBattleModifier(EnumBattleModifiers.block)) 
+        // Set block on battle modifier so we can adjust the attack chance in next attack phase
+        dispatch(setBattleModifier({modifier: EnumBattleModifiers.block, value: true}))
         
         props.onBlock({
             useBlock: useBlock,
-            successfulBlock: successfulBlock
+            successfulBlock: successfulBlock,
+            blockRoll: blockRoll,
+            block: block
         })
     }
 

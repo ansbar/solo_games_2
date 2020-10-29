@@ -4,7 +4,7 @@ import { useSelector, useDispatch } from 'react-redux'
 import diceRoll from '../DiceRoll/DiceRoll'
 import Block from './Block/Block'
 import Button from 'components/Utils/Button/Button'
-import { EnumBattleStates, EnumAttackResult } from 'assets/enums'
+import { EnumBattleStates, EnumBattleModifiers } from 'assets/enums'
 import { IBattleHistoryRecord } from 'assets/interfaces'
 import { getCurrentBattle, setCurrentOpponent, setBattleStatus } from 'components/BattleOverview/CurrentBattleSlice'
 import { getPlayerHp, getPlayerHpMax, decreaseHp} from 'app/playerSlice'
@@ -20,9 +20,8 @@ function Defend(props: IProps) {
     const playerHp = useSelector(getPlayerHp)
     const playerHpMax = useSelector(getPlayerHpMax)
     const currentBattle = useSelector(getCurrentBattle)
+    
     let playerPrivateHp = playerHp
-
-    let attackRoll = "2T6"    
     let hasAlreadyBlocked = false
     
 
@@ -42,24 +41,50 @@ function Defend(props: IProps) {
             loadOnce.current = true;
         }
     })
+
+    function initBattleRecord(){
+        return {
+            key: 0,
+            attacker: "",
+            defender: "Hämnaren",
+            modifiers: [],
+            attackRoll: "2T6",
+            attack: 0,
+            defense: 0,
+            hit: false,
+            blockRoll: "",
+            block: 0,
+            damageRoll: "",
+            damage: 0,            
+            hp: ""
+        }
+    }
     
 
     /* Function doDefend
      * @opponentIndex: If multiple opponents.
      * Main track. We run this function for every opponent alive */
     function doDefend(oIndex: number){    
+        const battleHistoryRecord: IBattleHistoryRecord = initBattleRecord()        
+
         // Keep track of current opponent in battle overview for instance
         dispatch(setCurrentOpponent(oIndex))
         const o = currentBattle.opponentlist[oIndex]          
          
         // Do attack role and calculate hit & damage
-        const attack = diceRoll(attackRoll)
+        const attack = diceRoll("2T6")
         const defense = o.player_defense
-        let result = attack > o.player_defense ? EnumAttackResult.hit : EnumAttackResult.miss
-        const damage = diceRoll(o.opponent_damage)        
+        const damage = diceRoll(o.opponent_damage)      
+        let hit = attack > defense
 
+        battleHistoryRecord.key = Date.now()
+        battleHistoryRecord.attacker = o.name
+        battleHistoryRecord.attack = attack
+        battleHistoryRecord.defense = defense        
+        battleHistoryRecord.hit = hit
+        
         // If opponent misses we end here
-        if (result === EnumAttackResult.miss){
+        if (!hit){
             endDefense(<b>{o.name} missar!</b>)
             return
         } 
@@ -74,7 +99,7 @@ function Defend(props: IProps) {
             * 3. We haven't tried blocking earlier in the same defense phase */
             handleBlock()            
         } else {
-            doDamage()
+            doDamage(<b>{o.name} träffar!<br/></b>)
         }
 
 
@@ -89,14 +114,22 @@ function Defend(props: IProps) {
              *   succesfulBlock: If  the block was succesful
              * }
              * Callback from Block component */
-            function handleBlockResult(blockResult: {useBlock: boolean, succesfulBlock: boolean}){
-                if (blockResult.succesfulBlock){
-                    result = EnumAttackResult.block
-                    endDefense(<b>Du lyckas blockera slaget!</b>)                
-                } else if (blockResult.useBlock) {
-                    hasAlreadyBlocked = true
-                    doDamage(<b>Du misslyckas med att blockera slaget.<br/></b>)
+            function handleBlockResult(blockResult: {useBlock: boolean, successfulBlock: boolean, blockRoll: string, block: number}){               
+                if (blockResult.useBlock){                      
+                    battleHistoryRecord.modifiers.push(EnumBattleModifiers.block)
+                    battleHistoryRecord.blockRoll = blockResult.blockRoll
+                    battleHistoryRecord.block = blockResult.block
+                    hasAlreadyBlocked = true    
+
+                    if (blockResult.successfulBlock) {       
+                        // If player successfully blocks
+                        endDefense(<b>Du lyckas blockera slaget!</b>) 
+                    }else{          
+                        // If the block fails                        
+                        doDamage(<b>Du misslyckas med att blockera slaget.<br/></b>)
+                    }            
                 } else {
+                    // If no block was used
                     doDamage(<b>{o.name} träffar!<br/></b>)
                 }
             }        
@@ -109,7 +142,11 @@ function Defend(props: IProps) {
         function doDamage(initalText?: JSX.Element){
             playerPrivateHp = calculateHpLeft()            
             const text = <span>{o.name} gör {damage} i skada.</span>
+
             dispatch(decreaseHp(damage))    
+            battleHistoryRecord.damageRoll = o.opponent_damage
+            battleHistoryRecord.damage = damage
+            battleHistoryRecord.hp = playerPrivateHp + "/" + playerHpMax
 
             endDefense(<span>{initalText}{text} Du har {playerPrivateHp} kroppspoäng kvar.</span>) 
 
@@ -125,18 +162,8 @@ function Defend(props: IProps) {
         function endDefense(text: JSX.Element){
             const firstOpponentIndex = findNextOpponent(oIndex + 1)   
 
-            // Save battle to history. The function is in parent component
-            props.onSaveToHistory({
-                key: Date.now(),
-                attacker: o.name,
-                defender: "Hämnaren",
-                attack: attack,
-                defense: defense,
-                result: result,
-                damage: damage,
-                damageRoll: o.opponent_damage,
-                hp: playerPrivateHp + "/" + playerHpMax
-            } as IBattleHistoryRecord)
+            // Save battle to history. The function is in parent component.
+            props.onSaveToHistory(battleHistoryRecord)
 
             setContent(            
                 <div>
@@ -150,9 +177,9 @@ function Defend(props: IProps) {
                                     text="Nästa attackerare" />
                             :
                                 <Button 
-                                    onClick={() => setBattleState(EnumBattleStates.chooseOpponent)} 
+                                    onClick={() => setBattleState(EnumBattleStates.pending)} 
                                     className="cta" 
-                                    text="Gå vidare" />
+                                    text="Nästa runda" />
                             }
                         </p>                           
                     :
